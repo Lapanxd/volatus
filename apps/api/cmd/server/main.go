@@ -40,14 +40,19 @@ func main() {
 	r := gin.Default()
 
 	r.Use(middleware.ErrorHandlerMiddleware())
-	r.Use(middleware.JWTMiddleware())
-
-	authGroup := r.Group("/auth")
-	userGroup := r.Group("/users")
 
 	route.HealthRoutes(r)
+
+	authGroup := r.Group("/auth")
 	route.AuthRoutes(authGroup, db)
+
+	userGroup := r.Group("/users")
+	userGroup.Use(middleware.JWTMiddleware())
 	route.UserRoutes(userGroup, db)
+
+	handshakeGroup := r.Group("/handshake")
+	handshakeGroup.Use(middleware.JWTMiddleware())
+	route.HandshakeRoutes(handshakeGroup)
 
 	r.Run(":8080")
 
