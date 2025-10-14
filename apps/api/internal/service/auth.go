@@ -2,12 +2,10 @@ package service
 
 import (
 	"errors"
-	"log"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
+	"github.com/lapanxd/volatus-api/config"
 	"github.com/lapanxd/volatus-api/internal/model"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -48,22 +46,11 @@ func AuthenticateUser(db *gorm.DB, username, password string) (*model.User, erro
 }
 
 func GenerateJWT(userID uint) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-	jwtDuration, err := time.ParseDuration(os.Getenv("JWT_EXPIRES"))
-	if err != nil {
-		jwtDuration = 72 * time.Hour
-	}
-
 	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(jwtDuration).Unix(),
+		"exp":     time.Now().Add(config.JWTDuration).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(jwtSecret))
+	return token.SignedString([]byte(config.JWTSecret))
 }

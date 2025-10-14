@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"github.com/lapanxd/volatus-api/config"
 	"github.com/lapanxd/volatus-api/internal/middleware"
 	"github.com/lapanxd/volatus-api/internal/model"
 	"github.com/lapanxd/volatus-api/internal/route"
@@ -15,29 +14,21 @@ import (
 )
 
 func SetupDatabase() *gorm.DB {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	dns := fmt.Sprintf(
+	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_SSLMODE"),
+		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort, config.DBSSLMode,
 	)
-	db, err := gorm.Open(postgres.Open(dns), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Error connecting to database", err)
 	}
-
 	log.Println("Connected to database")
 	return db
 }
 
 func main() {
+	config.LoadConfig()
+
 	db := SetupDatabase()
 
 	err := db.AutoMigrate(&model.User{})
