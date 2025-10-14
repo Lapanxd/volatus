@@ -43,7 +43,7 @@ func main() {
 	r.Use(middleware.JWTMiddleware())
 
 	authGroup := r.Group("/auth")
-	userGroup := r.Group("/user")
+	userGroup := r.Group("/users")
 
 	route.HealthRoutes(r)
 	route.AuthRoutes(authGroup, db)
