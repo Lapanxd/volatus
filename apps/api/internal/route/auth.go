@@ -1,11 +1,11 @@
-package routes
+package route
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lapanxd/volatus-api/internal/dtos"
-	"github.com/lapanxd/volatus-api/internal/services"
+	"github.com/lapanxd/volatus-api/internal/dto"
+	"github.com/lapanxd/volatus-api/internal/service"
 	"gorm.io/gorm"
 )
 
@@ -16,19 +16,19 @@ func AuthRoutes(r *gin.RouterGroup, db *gorm.DB) {
 }
 
 func Register(c *gin.Context, db *gorm.DB) {
-	var input dtos.RegisterInput
+	var input dto.RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 		return
 	}
 
-	user, err := services.RegisterUser(db, input.Username, input.Password)
+	user, err := service.RegisterUser(db, input.Username, input.Password)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response := dtos.UserResponse{
+	response := dto.UserResponse{
 		ID:       user.ID,
 		Username: user.Username,
 	}

@@ -1,20 +1,20 @@
-package services
+package service
 
 import (
 	"errors"
 
-	"github.com/lapanxd/volatus-api/internal/models"
+	"github.com/lapanxd/volatus-api/internal/model"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func RegisterUser(db *gorm.DB, username, password string) (*models.User, error) {
+func RegisterUser(db *gorm.DB, username, password string) (*model.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, errors.New("cannot hash password")
 	}
 
-	user := models.User{
+	user := model.User{
 		Username: username,
 		Password: string(hashedPassword),
 	}

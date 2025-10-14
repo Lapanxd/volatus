@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/lapanxd/volatus-api/internal/middlewares"
-	"github.com/lapanxd/volatus-api/internal/models"
-	"github.com/lapanxd/volatus-api/internal/routes"
+	"github.com/lapanxd/volatus-api/internal/middleware"
+	"github.com/lapanxd/volatus-api/internal/model"
+	"github.com/lapanxd/volatus-api/internal/route"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -40,7 +40,7 @@ func SetupDatabase() *gorm.DB {
 func main() {
 	db := SetupDatabase()
 
-	err := db.AutoMigrate(&models.User{})
+	err := db.AutoMigrate(&model.User{})
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -48,12 +48,12 @@ func main() {
 
 	r := gin.Default()
 
-	r.Use(middlewares.ErrorHandlerMiddleware())
+	r.Use(middleware.ErrorHandlerMiddleware())
 
 	authGroup := r.Group("/auth")
 
-	routes.HealthRoutes(r)
-	routes.AuthRoutes(authGroup, db)
+	route.HealthRoutes(r)
+	route.AuthRoutes(authGroup, db)
 
 	r.Run(":8080")
 
