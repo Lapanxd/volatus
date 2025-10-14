@@ -40,11 +40,14 @@ func main() {
 	r := gin.Default()
 
 	r.Use(middleware.ErrorHandlerMiddleware())
+	r.Use(middleware.JWTMiddleware())
 
 	authGroup := r.Group("/auth")
+	userGroup := r.Group("/user")
 
 	route.HealthRoutes(r)
 	route.AuthRoutes(authGroup, db)
+	route.UserRoutes(userGroup, db)
 
 	r.Run(":8080")
 
