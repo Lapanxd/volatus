@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,11 @@ type RegisterInput struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type UserResponse struct {
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+}
+
 func AuthRoutes(r *gin.RouterGroup, db *gorm.DB) {
 	r.POST("/register", func(c *gin.Context) {
 		Register(c, db)
@@ -24,13 +30,13 @@ func Register(c *gin.Context, db *gorm.DB) {
 	var input RegisterInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot hash password"})
+		c.Error(errors.New("cannot hash password"))
 		return
 	}
 
@@ -40,13 +46,13 @@ func Register(c *gin.Context, db *gorm.DB) {
 	}
 
 	if err := db.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot create user"})
+		c.Error(errors.New("cannot create user"))
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User created",
-		"user": gin.H{
-			"username": user.Username,
-		},
-	})
+	response := UserResponse{
+		ID:       user.ID,
+		Username: user.Username,
+	}
+
+	c.JSON(http.StatusCreated, response)
 }
