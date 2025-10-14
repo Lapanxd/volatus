@@ -13,6 +13,10 @@ func AuthRoutes(r *gin.RouterGroup, db *gorm.DB) {
 	r.POST("/register", func(c *gin.Context) {
 		Register(c, db)
 	})
+
+	r.POST("/login", func(c *gin.Context) {
+		Login(c, db)
+	})
 }
 
 func Register(c *gin.Context, db *gorm.DB) {
@@ -34,4 +38,28 @@ func Register(c *gin.Context, db *gorm.DB) {
 	}
 
 	c.JSON(http.StatusCreated, response)
+}
+
+func Login(c *gin.Context, db *gorm.DB) {
+	var input dto.LoginInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+		return
+	}
+
+	user, err := service.AuthenticateUser(db, input.Username, input.Password)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
+	tokenString, err := service.GenerateJWT(user.ID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.LoginResponse{
+		Token: tokenString,
+	})
 }
