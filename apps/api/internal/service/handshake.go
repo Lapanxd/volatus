@@ -25,7 +25,15 @@ func InitHandshake(fromUserID, toUserID uint, sdpOffer string) (string, error) {
 		return "", errors.New("cannot handshake with yourself")
 	}
 
-	// todo: vérifier que la session n'existe pas déjà entre ces deux users
+	for _, session := range handshakeStore {
+		if session.FromUserID == fromUserID && session.ToUserID == toUserID {
+			return "", errors.New("handshake request already exists")
+		}
+		if session.FromUserID == toUserID && session.ToUserID == fromUserID {
+			return "", errors.New("handshake request already exists in reverse")
+		}
+	}
+
 	sessionID := uuid.NewString()
 	storeMutex.Lock()
 	defer storeMutex.Unlock()
