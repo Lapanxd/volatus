@@ -60,6 +60,6 @@ func Login(c *gin.Context, db *gorm.DB) {
 	}
 
 	c.JSON(http.StatusOK, dto.LoginResponse{
-		Token: tokenString,
+		AccessToken: tokenString,
 	})
 }

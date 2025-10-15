@@ -14,3 +14,12 @@ type ResponseInput struct {
 	Accepted  bool   `json:"accepted"`
 	SDPAnswer string `json:"sdp_answer"`
 }
+
+type Pending struct {
+	SessionID  string `json:"session_id"`
+	FromUserID uint   `json:"from_user_id"`
+}
+
+type PendingOutput struct {
+	PendingSessions []Pending `json:"pending_sessions"`
+}

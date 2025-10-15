@@ -15,10 +15,10 @@ import (
 type HandshakeSession struct {
 	FromUserID uint
 	ToUserID   uint
-	OfferSDP   string
+	SDPOffer   string
 }
 
-// persist sessions in database when needed (redis or postgres)
+// todo: persist sessions in database when needed (redis or postgres)
 var (
 	handshakeStore = make(map[string]HandshakeSession)
 	storeMutex     = sync.Mutex{}
@@ -34,7 +34,7 @@ func HandshakeRoutes(r *gin.RouterGroup, db *gorm.DB) {
 	})
 
 	r.GET("/pending", func(c *gin.Context) {
-		GetPendingHandshakeSession(c)
+		GetPendingHandshake(c)
 	})
 }
 
@@ -62,13 +62,15 @@ func HandshakeInit(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
+	// todo: add check if there are no pending request from & to the same user (ex a to b already exists)
+
 	sessionID := uuid.NewString()
 
 	storeMutex.Lock()
 	handshakeStore[sessionID] = HandshakeSession{
 		FromUserID: fromUserID,
 		ToUserID:   req.ToUserID,
-		OfferSDP:   req.SDPOffer,
+		SDPOffer:   req.SDPOffer,
 	}
 	storeMutex.Unlock()
 
@@ -120,6 +122,28 @@ func HandshakeResponse(c *gin.Context, db *gorm.DB) {
 	c.Status(http.StatusOK)
 }
 
-func GetPendingHandshakeSession(c *gin.Context) {
+func GetPendingHandshake(c *gin.Context) {
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user"})
+		return
+	}
+	userID := userIDVal.(uint)
 
+	storeMutex.Lock()
+	defer storeMutex.Unlock()
+
+	pendingSessions := make([]dto.Pending, 0)
+	for id, session := range handshakeStore {
+		if session.ToUserID == userID {
+			pendingSessions = append(pendingSessions, dto.Pending{
+				SessionID:  id,
+				FromUserID: session.FromUserID,
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, dto.PendingOutput{
+		PendingSessions: pendingSessions,
+	})
 }
