@@ -1,27 +1,12 @@
 package route
 
-import "C"
 import (
 	"net/http"
-	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/lapanxd/volatus-api/internal/dto"
 	"github.com/lapanxd/volatus-api/internal/service"
 	"gorm.io/gorm"
-)
-
-type HandshakeSession struct {
-	FromUserID uint
-	ToUserID   uint
-	SDPOffer   string
-}
-
-// todo: persist sessions in database when needed (redis or postgres)
-var (
-	handshakeStore = make(map[string]HandshakeSession)
-	storeMutex     = sync.Mutex{}
 )
 
 func HandshakeRoutes(r *gin.RouterGroup, db *gorm.DB) {
@@ -29,13 +14,9 @@ func HandshakeRoutes(r *gin.RouterGroup, db *gorm.DB) {
 		HandshakeInit(c, db)
 	})
 
-	r.POST("/response", func(c *gin.Context) {
-		HandshakeResponse(c, db)
-	})
+	r.POST("/response", HandshakeResponse)
 
-	r.GET("/pending", func(c *gin.Context) {
-		GetPendingHandshake(c)
-	})
+	r.GET("/pending", GetPendingHandshake)
 }
 
 func HandshakeInit(c *gin.Context, db *gorm.DB) {
@@ -45,105 +26,46 @@ func HandshakeInit(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	fromUserIDVal, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user"})
-		return
-	}
-	fromUserID := fromUserIDVal.(uint)
-
+	fromUserID := c.GetUint("user_id")
 	if !service.CheckIfUserExists(db, req.ToUserID) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "target user does not exist"})
 		return
 	}
 
-	if req.ToUserID == fromUserID {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot handshake with yourself"})
+	sessionID, err := service.InitHandshake(fromUserID, req.ToUserID, req.SDPOffer)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// todo: add check if there are no pending request from & to the same user (ex a to b already exists)
-
-	sessionID := uuid.NewString()
-
-	storeMutex.Lock()
-	handshakeStore[sessionID] = HandshakeSession{
-		FromUserID: fromUserID,
-		ToUserID:   req.ToUserID,
-		SDPOffer:   req.SDPOffer,
-	}
-	storeMutex.Unlock()
-
-	c.JSON(http.StatusOK, dto.InitOutput{
-		SessionID: sessionID,
-	})
+	c.JSON(http.StatusOK, dto.InitOutput{SessionID: sessionID})
 }
 
-func HandshakeResponse(c *gin.Context, db *gorm.DB) {
+func HandshakeResponse(c *gin.Context) {
 	var req dto.ResponseInput
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 		return
 	}
 
-	userIDVal, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user"})
-		return
-	}
-	userID := userIDVal.(uint)
-
-	storeMutex.Lock()
-	session, found := handshakeStore[req.SessionID]
-
-	if !found {
-		storeMutex.Unlock()
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "session not found"})
+	userID := c.GetUint("user_id")
+	session, err := service.RespondHandshake(userID, req.SessionID, req.Accepted)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if session.ToUserID != userID {
-		storeMutex.Unlock()
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not your session"})
+	if session == nil {
+		// return 200 even if handshake is not accepted
+		c.Status(http.StatusOK)
 		return
 	}
 
-	if !req.Accepted {
-		delete(handshakeStore, req.SessionID)
-		storeMutex.Unlock()
-		c.JSON(http.StatusOK, "handshake refused")
-		return
-	}
-
-	delete(handshakeStore, req.SessionID)
-	storeMutex.Unlock()
-
-	// todo: notify "from user" that session has been accepted
 	c.Status(http.StatusOK)
 }
 
 func GetPendingHandshake(c *gin.Context) {
-	userIDVal, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user"})
-		return
-	}
-	userID := userIDVal.(uint)
-
-	storeMutex.Lock()
-	defer storeMutex.Unlock()
-
-	pendingSessions := make([]dto.Pending, 0)
-	for id, session := range handshakeStore {
-		if session.ToUserID == userID {
-			pendingSessions = append(pendingSessions, dto.Pending{
-				SessionID:  id,
-				FromUserID: session.FromUserID,
-			})
-		}
-	}
-
-	c.JSON(http.StatusOK, dto.PendingOutput{
-		PendingSessions: pendingSessions,
-	})
+	userID := c.GetUint("user_id")
+	pending := service.GetPendingHandshakes(userID)
+	c.JSON(http.StatusOK, dto.PendingOutput{PendingSessions: pending})
 }
