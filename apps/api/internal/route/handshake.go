@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/lapanxd/volatus-api/internal/dto"
+	"github.com/lapanxd/volatus-api/internal/service"
+	"gorm.io/gorm"
 )
 
 type HandshakeSession struct {
@@ -20,11 +22,13 @@ var (
 	storeMutex     = sync.Mutex{}
 )
 
-func HandshakeRoutes(r *gin.RouterGroup) {
-	r.POST("/init", HandshakeInit)
+func HandshakeRoutes(r *gin.RouterGroup, db *gorm.DB) {
+	r.POST("/init", func(c *gin.Context) {
+		HandshakeInit(c, db)
+	})
 }
 
-func HandshakeInit(c *gin.Context) {
+func HandshakeInit(c *gin.Context, db *gorm.DB) {
 	var req dto.InitRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
@@ -38,6 +42,16 @@ func HandshakeInit(c *gin.Context) {
 	}
 	fromUserID := fromUserIDVal.(uint)
 
+	if !CheckIfUserExists(db, req.ToUserID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "target user does not exist"})
+		return
+	}
+
+	if req.ToUserID == fromUserID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot handshake with yourself"})
+		return
+	}
+
 	sessionID := uuid.NewString()
 
 	storeMutex.Lock()
@@ -50,4 +64,9 @@ func HandshakeInit(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.InitResponse{
 		SessionID: sessionID,
 	})
+}
+
+func CheckIfUserExists(db *gorm.DB, userID uint) bool {
+	_, err := service.GetUserById(db, userID)
+	return err == nil
 }

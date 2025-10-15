@@ -52,7 +52,7 @@ func main() {
 
 	handshakeGroup := r.Group("/handshake")
 	handshakeGroup.Use(middleware.JWTMiddleware())
-	route.HandshakeRoutes(handshakeGroup)
+	route.HandshakeRoutes(handshakeGroup, db)
 
 	r.Run(":8080")
 
