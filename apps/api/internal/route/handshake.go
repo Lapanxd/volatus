@@ -1,11 +1,14 @@
 package route
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lapanxd/volatus-api/internal/dto"
+	"github.com/lapanxd/volatus-api/internal/model"
 	"github.com/lapanxd/volatus-api/internal/service"
+	"github.com/lapanxd/volatus-api/internal/sse"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +17,9 @@ func HandshakeRoutes(r *gin.RouterGroup, db *gorm.DB) {
 		HandshakeInit(c, db)
 	})
 
-	r.POST("/response", HandshakeResponse)
+	r.POST("/response", func(c *gin.Context) {
+		HandshakeResponse(c, db)
+	})
 
 	r.GET("/pending", GetPendingHandshake)
 }
@@ -41,7 +46,7 @@ func HandshakeInit(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, dto.InitOutput{SessionID: sessionID})
 }
 
-func HandshakeResponse(c *gin.Context) {
+func HandshakeResponse(c *gin.Context, db *gorm.DB) {
 	var req dto.ResponseInput
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
@@ -59,6 +64,35 @@ func HandshakeResponse(c *gin.Context) {
 		// return 200 even if handshake is not accepted
 		c.Status(http.StatusOK)
 		return
+	}
+
+	succeeded := sse.SendEvent(session.FromUserID, sse.SSEEvent{
+		EventType: "handshake_accepted",
+		Payload: dto.AcceptedPayloadOutput{
+			FromUserID: session.FromUserID,
+			ToUserID:   session.ToUserID,
+			SDPAnswer:  req.SDPAnswer,
+		},
+	})
+
+	if !succeeded {
+		payloadBytes, err := json.Marshal(dto.AcceptedPayloadOutput{
+			FromUserID: session.FromUserID,
+			ToUserID:   session.ToUserID,
+			SDPAnswer:  req.SDPAnswer,
+		})
+		if err != nil {
+			c.Status(http.StatusOK)
+			return
+		}
+
+		notification := model.PendingNotification{
+			UserID:    session.FromUserID,
+			EventType: "handshake_accepted",
+			Payload:   string(payloadBytes),
+		}
+
+		db.Create(&notification)
 	}
 
 	c.Status(http.StatusOK)

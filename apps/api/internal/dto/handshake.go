@@ -23,3 +23,9 @@ type Pending struct {
 type PendingOutput struct {
 	PendingSessions []Pending `json:"pending_sessions"`
 }
+
+type AcceptedPayloadOutput struct {
+	FromUserID uint   `json:"from_user_id"`
+	ToUserID   uint   `json:"to_user_id"`
+	SDPAnswer  string `json:"sdp_answer"`
+}

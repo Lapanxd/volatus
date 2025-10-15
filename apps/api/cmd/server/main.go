@@ -31,7 +31,7 @@ func main() {
 
 	db := SetupDatabase()
 
-	err := db.AutoMigrate(&model.User{})
+	err := db.AutoMigrate(&model.User{}, &model.PendingNotification{})
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -53,6 +53,10 @@ func main() {
 	handshakeGroup := r.Group("/handshake")
 	handshakeGroup.Use(middleware.JWTMiddleware())
 	route.HandshakeRoutes(handshakeGroup, db)
+
+	sseGroup := r.Group("/sse")
+	sseGroup.Use(middleware.JWTMiddleware())
+	route.SSERoutes(sseGroup)
 
 	r.Run(":8080")
 
