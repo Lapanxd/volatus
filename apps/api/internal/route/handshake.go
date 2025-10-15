@@ -74,7 +74,7 @@ func HandshakeInit(c *gin.Context, db *gorm.DB) {
 	}
 	storeMutex.Unlock()
 
-	c.JSON(http.StatusOK, dto.InitResponse{
+	c.JSON(http.StatusOK, dto.InitOutput{
 		SessionID: sessionID,
 	})
 }

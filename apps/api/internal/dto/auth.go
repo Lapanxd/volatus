@@ -5,7 +5,7 @@ type RegisterInput struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type UserResponse struct {
+type UserOutput struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
 }
@@ -15,6 +15,6 @@ type LoginInput struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type LoginResponse struct {
+type LoginOutput struct {
 	AccessToken string `json:"token"`
 }

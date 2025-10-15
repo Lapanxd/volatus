@@ -5,7 +5,7 @@ type InitInput struct {
 	SDPOffer string `json:"sdp_offer" binding:"required"`
 }
 
-type InitResponse struct {
+type InitOutput struct {
 	SessionID string `json:"session_id"`
 }
 

@@ -29,7 +29,7 @@ func Me(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	response := dto.UserResponse{
+	response := dto.UserOutput{
 		ID:       user.ID,
 		Username: user.Username,
 	}

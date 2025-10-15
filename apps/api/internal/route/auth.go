@@ -32,7 +32,7 @@ func Register(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	response := dto.UserResponse{
+	response := dto.UserOutput{
 		ID:       user.ID,
 		Username: user.Username,
 	}
@@ -59,7 +59,7 @@ func Login(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.LoginResponse{
+	c.JSON(http.StatusOK, dto.LoginOutput{
 		AccessToken: tokenString,
 	})
 }
