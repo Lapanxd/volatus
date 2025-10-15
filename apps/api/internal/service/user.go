@@ -17,3 +17,8 @@ func GetUserById(db *gorm.DB, userId uint) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+func CheckIfUserExists(db *gorm.DB, userID uint) bool {
+	_, err := GetUserById(db, userID)
+	return err == nil
+}
