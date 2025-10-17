@@ -1,39 +1,38 @@
-use crate::api::dtos::auth::{LoginResponse, RegisterResponse};
+use tauri::{AppHandle, Wry};
+use tauri_plugin_store::StoreExt;
+use crate::api::dtos::auth::{LoginOutputDto, RegisterOutputDto};
 use crate::{API_CLIENT, API_URL};
 
 #[tauri::command]
-pub async fn login(username: String, password: String) -> Result<LoginResponse, String> {
-    let client = &API_CLIENT.client;
+pub async fn login(app_handle: AppHandle<Wry>, username: String, password: String) -> Result<(), String> {
+    let store = app_handle.store("store.json").map_err(|e| e.to_string())?;
 
-    let res = client.post(format!("{}/auth/login", *API_URL))
-        .json(&serde_json::json!({ "username": username, "password": password }))
-        .send()
+    let res = API_CLIENT.post(
+        &format!("{}/auth/login", *API_URL),
+        serde_json::json!({ "username": username, "password": password }))
         .await
         .map_err(|e| e.to_string())?;
 
     if res.status().is_success() {
-        let body: LoginResponse = res.json().await.map_err(|e| e.to_string())?;
+        let body: LoginOutputDto = res.json().await.map_err(|e| e.to_string())?;
 
         API_CLIENT.set_token(body.token.clone());
-
-        Ok(body)
+        store.set("auth_token", serde_json::json!(body.token.clone()));
+        Ok(())
     } else {
         Err("Login failed".into())
     }
 }
-
 #[tauri::command]
-pub async fn register(username: String, password: String) -> Result<RegisterResponse, String> {
-    let client = &API_CLIENT.client;
-
-    let res = client.post(format!("{}/auth/register", *API_URL))
-        .json(&serde_json::json!({ "username": username, "password": password }))
-        .send()
+pub async fn register(username: String, password: String) -> Result<RegisterOutputDto, String> {
+    let res = API_CLIENT.post(
+        &format!("{}/auth/register", *API_URL),
+        serde_json::json!({ "username": username, "password": password }))
         .await
         .map_err(|e| e.to_string())?;
 
     if res.status().is_success() {
-        let body: RegisterResponse = res.json().await.map_err(|e| e.to_string())?;
+        let body: RegisterOutputDto = res.json().await.map_err(|e| e.to_string())?;
         Ok(body)
     } else {
         Err("Register failed".into())
