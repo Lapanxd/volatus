@@ -21,6 +21,10 @@ impl ApiClient {
         *self.token.write().unwrap() = Some(token);
     }
 
+    pub fn remove_token(&self) {
+        *self.token.write().unwrap() = None;
+    }
+
     pub async fn get(&self, url: &str) -> Result<reqwest::Response, reqwest::Error> {
         let mut req = self.client.get(url);
 

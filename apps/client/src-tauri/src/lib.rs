@@ -6,7 +6,7 @@ use std::env;
 use once_cell::sync::Lazy;
 use tauri_plugin_store::StoreExt;
 use crate::api::client::ApiClient;
-use crate::commands::auth::{login, register};
+use crate::commands::auth::{login, register, logout};
 use crate::commands::user::get_me;
 
 pub static API_URL: Lazy<String> = Lazy::new(|| {
@@ -34,7 +34,7 @@ pub fn run() {
             Ok(())
         })
 
-        .invoke_handler(tauri::generate_handler![login, register, get_me])
+        .invoke_handler(tauri::generate_handler![login, register, logout,  get_me])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
