@@ -6,7 +6,7 @@ use crate::{API_CLIENT, API_URL};
 #[tauri::command]
 pub async fn login(app_handle: AppHandle<Wry>, username: String, password: String) -> Result<(), String> {
     let store = app_handle.store("store.json").map_err(|e| e.to_string())?;
-    
+
     let res = API_CLIENT.post(
         &format!("{}/auth/login", *API_URL),
         serde_json::json!({ "username": username, "password": password }))
@@ -23,6 +23,7 @@ pub async fn login(app_handle: AppHandle<Wry>, username: String, password: Strin
         Err("Login failed".into())
     }
 }
+
 #[tauri::command]
 pub async fn register(username: String, password: String) -> Result<RegisterOutputDto, String> {
     let res = API_CLIENT.post(

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import {inject, onMounted, ref} from "vue";
 import {Store} from "@tauri-apps/plugin-store";
-import {User} from "../../core/models/user.ts";
-import {Nullable} from "../../core/types/nullable.ts";
+import {User} from "../core/models/user.ts";
+import {Nullable} from "../core/types/nullable.ts";
 import {invoke} from "@tauri-apps/api/core";
-import {refreshStore, RouteNames} from "../../main.ts";
+import {refreshStore, RouteNames} from "../main.ts";
 import {useRouter} from "vue-router";
 
 const store = inject<Store>("store")!;

@@ -461,7 +461,6 @@ name = "client"
 version = "0.1.0"
 dependencies = [
  "dotenv",
- "log",
  "once_cell",
  "reqwest",
  "serde",
