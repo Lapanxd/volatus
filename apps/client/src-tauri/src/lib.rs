@@ -8,7 +8,7 @@ use tauri_plugin_store::StoreExt;
 
 use crate::api::client::ApiClient;
 use crate::commands::auth::{login, logout, register};
-use crate::commands::handshake::{handshake_init, handshake_response, get_pending_handshakes};
+use crate::commands::handshake::{get_pending_handshakes, handshake_init, handshake_response};
 use crate::commands::user::get_me;
 
 pub static API_URL: Lazy<String> =
@@ -35,7 +35,13 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            login, register, logout, get_me, handshake_init, handshake_response, get_pending_handshakes
+            login,
+            register,
+            logout,
+            get_me,
+            handshake_init,
+            handshake_response,
+            get_pending_handshakes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -461,6 +461,7 @@ name = "client"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "futures-util",
  "once_cell",
  "reqwest",
  "serde",

@@ -45,6 +45,5 @@ pub async fn logout(app_handle: AppHandle<Wry>) -> Result<(), String> {
     let store = app_handle.store("store.json").map_err(|e| e.to_string())?;
     store.clear();
     store.save().map_err(|e| e.to_string())?;
-    eprintln!("logout");
     Ok(())
 }
