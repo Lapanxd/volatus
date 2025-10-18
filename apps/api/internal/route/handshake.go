@@ -101,5 +101,5 @@ func HandshakeResponse(c *gin.Context, db *gorm.DB) {
 func GetPendingHandshake(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	pending := service.GetPendingHandshakes(userID)
-	c.JSON(http.StatusOK, dto.PendingOutput{PendingSessions: pending})
+	c.JSON(http.StatusOK, pending)
 }
