@@ -19,6 +19,11 @@ func SSERoutes(r *gin.RouterGroup) {
 		sse.Register(userID, ch)
 		defer sse.UnRegister(userID)
 
+		log.Printf("[SSE] Client %d connected", userID)
+
+		c.SSEvent("init", "connected")
+		c.Writer.Flush()
+		
 		clientGone := c.Request.Context().Done()
 
 		for {
