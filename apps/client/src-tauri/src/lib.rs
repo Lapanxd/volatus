@@ -9,7 +9,7 @@ use tauri_plugin_store::StoreExt;
 use crate::api::client::ApiClient;
 use crate::commands::auth::{login, logout, register};
 use crate::commands::handshake::{get_pending_handshakes, handshake_init, handshake_response};
-use crate::commands::user::get_me;
+use crate::commands::user::{get_me, get_user_by_id};
 
 pub static API_URL: Lazy<String> =
     Lazy::new(|| env::var("API_URL").expect("API_URL must be set in .env"));
@@ -39,6 +39,7 @@ pub fn run() {
             register,
             logout,
             get_me,
+            get_user_by_id,
             handshake_init,
             handshake_response,
             get_pending_handshakes,

@@ -20,3 +20,18 @@ pub async fn get_me(app_handle: AppHandle<Wry>) -> Result<(), String> {
         Err("Cannot get me".to_string())
     }
 }
+
+#[tauri::command]
+pub async fn get_user_by_id(id: u32) -> Result<UserOutputDto, String> {
+    let res = API_CLIENT.get(
+        &format!("{}/users/{}", *API_URL, id))
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() {
+        let body: UserOutputDto = res.json().await.map_err(|e| e.to_string())?;
+        Ok(body)
+    } else {
+        Err("Cannot get me".to_string())
+    }
+}
