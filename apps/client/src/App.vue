@@ -61,7 +61,30 @@ onUnmounted(() => stopSSE());
 </script>
 
 <template>
-  <RouterView/>
+  <div class="app-container">
+    <RouterView/>
+  </div>
+
 </template>
 
 <style scoped></style>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+}
+
+* {
+  margin: 0;
+}
+
+.app-container {
+  height: 100vh;
+  width: 100vw;
+}
+
+p {
+  font-size: 0.9rem;
+}
+</style>

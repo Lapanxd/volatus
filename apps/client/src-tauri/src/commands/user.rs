@@ -32,6 +32,6 @@ pub async fn get_user_by_id(id: u32) -> Result<UserOutputDto, String> {
         let body: UserOutputDto = res.json().await.map_err(|e| e.to_string())?;
         Ok(body)
     } else {
-        Err("Cannot get me".to_string())
+        Err("Cannot get user".to_string())
     }
 }

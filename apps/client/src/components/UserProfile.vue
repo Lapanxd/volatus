@@ -3,12 +3,9 @@ import {inject, onMounted, ref} from "vue";
 import {Store} from "@tauri-apps/plugin-store";
 import {User} from "../core/models/user.ts";
 import {Nullable} from "../core/types/nullable.ts";
-import {invoke} from "@tauri-apps/api/core";
-import {refreshStore, RouteNames} from "../main.ts";
-import {useRouter} from "vue-router";
+import LogoutButton from "./LogoutButton.vue";
 
 const store = inject<Store>("store")!;
-const router = useRouter();
 
 const user = ref<Nullable<User>>(null);
 
@@ -20,25 +17,25 @@ onMounted(async () => {
   }
 });
 
-const onClickLogout = async () => {
-  await invoke("logout");
-  await refreshStore();
-  void router.push(RouteNames.Login);
-}
 
 </script>
 
 <template>
   <div class="user-profile">
-    <p>{{ user?.id }}</p>
-    <p>{{ user?.username }}</p>
-    <button @click="onClickLogout">Logout</button>
+    <LogoutButton/>
+    <img :src="`https://ui-avatars.com/api/?name=${user?.username}`" alt="User's avatar"/>
   </div>
 </template>
 
 <style scoped>
 .user-profile {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.5rem;
+}
+
+img {
+  border-radius: 50%;
+  height: 30px;
+  width: 30px;
 }
 </style>
