@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import UserProfile from "../components/UserProfile.vue";
 import HandshakeComponent from "../components/HandshakeComponent.vue";
+import ConversationsComponent from "../components/ConversationsComponent.vue";
 </script>
 
 <template>
@@ -11,6 +12,7 @@ import HandshakeComponent from "../components/HandshakeComponent.vue";
     </div>
     <div class="content">
       <HandshakeComponent/>
+      <ConversationsComponent/>
     </div>
   </div>
 
@@ -27,12 +29,21 @@ import HandshakeComponent from "../components/HandshakeComponent.vue";
 .nav {
   display: flex;
   justify-content: end;
-  padding: 0.5rem;
+  padding: 1rem;
   box-sizing: border-box;
 }
 
 .content {
-  padding: 0.5rem;
+  height: 100%;
+  padding: 0 1rem 1rem 1rem;
   box-sizing: border-box;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.content > div {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
 }
 </style>

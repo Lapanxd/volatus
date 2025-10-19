@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {invoke} from "@tauri-apps/api/core";
-import {ref, watchEffect} from "vue";
+import {onMounted, ref, watchEffect} from "vue";
 import {PendingHandshakesOutput, PendingHandshakeWithUser} from "../core/models/pending-handshakes-output.ts";
 import {User} from "../core/models/user.ts";
 
@@ -32,6 +32,10 @@ watchEffect(async () => {
       }))
   )
 })
+
+onMounted(async () => {
+  await getHandshakes();
+});
 </script>
 
 <template>
