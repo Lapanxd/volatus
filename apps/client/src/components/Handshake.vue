@@ -3,6 +3,9 @@ import {invoke} from "@tauri-apps/api/core";
 import {onMounted, ref, watchEffect} from "vue";
 import {PendingHandshakesOutput, PendingHandshakeWithUser} from "../core/models/pending-handshakes-output.ts";
 import {User} from "../core/models/user.ts";
+import NewHandshake from "./NewHandshake.vue";
+
+const peerConnections = ref<Record<string, RTCPeerConnection>>({});
 
 const handshakes = ref<PendingHandshakesOutput[]>([]);
 const handshakesWithUsers = ref<PendingHandshakeWithUser[]>([])
@@ -12,13 +15,47 @@ const getHandshakes = async () => {
   handshakes.value = await invoke("get_pending_handshakes");
 }
 
-const responseHandshake = async (session_id: string, accepted: boolean) => {
+const responseHandshake = async (session_id: string, accepted: boolean, sdp_offer: string) => {
   try {
-    await invoke("handshake_response", {sessionId: session_id, accepted, sdpAnswer: "wip_sdp_answer"});
+    let sdpAnswer;
+    if (accepted) {
+      sdpAnswer = await createAnswer(session_id, sdp_offer);
+    }
+
+    await invoke("handshake_response", {sessionId: session_id, accepted, sdpAnswer: sdpAnswer});
+    await getHandshakes();
   } catch (error) {
     console.error(error);
   }
 }
+
+const createAnswer = async (sessionId: string, sdpOffer: string) => {
+  const pc = new RTCPeerConnection();
+
+  peerConnections.value[sessionId] = pc;
+
+  pc.ondatachannel = (event) => {
+    const dataChannel = event.channel;
+    dataChannel.onmessage = (e) => console.log("Received:", e.data);
+    dataChannel.onopen = () => console.log("DataChannel ouvert !");
+  };
+
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      console.log("New ICE candidate:", event.candidate);
+    } else {
+      console.log("All ICE candidates gathered");
+    }
+  };
+
+  await pc.setRemoteDescription({type: "offer", sdp: sdpOffer});
+
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+
+  return answer.sdp!;
+};
+
 
 const getUserById = async (userId: number): Promise<User> => {
   return await invoke<User>("get_user_by_id", {id: userId});
@@ -28,7 +65,8 @@ watchEffect(async () => {
   handshakesWithUsers.value = await Promise.all(
       handshakes.value.map(async h => ({
         sessionId: h.session_id,
-        fromUser: await getUserById(h.from_user_id)
+        fromUser: await getUserById(h.from_user_id),
+        sdpOffer: h.sdp_offer
       }))
   )
 })
@@ -40,6 +78,8 @@ onMounted(async () => {
 
 <template>
   <div class="handshake">
+    <NewHandshake/>
+
     <div class="header">
       <p>Pending requests</p>
       <button @click="getHandshakes">Refresh</button>
@@ -50,8 +90,8 @@ onMounted(async () => {
         <p>{{ handshake.fromUser.username }}</p>
       </div>
       <div class="actions">
-        <button @click="responseHandshake(handshake.sessionId, true)">Accept</button>
-        <button @click="responseHandshake(handshake.sessionId, false)">Refuse</button>
+        <button @click="responseHandshake(handshake.sessionId, true, handshake.sdpOffer)">Accept</button>
+        <button @click="responseHandshake(handshake.sessionId, false, handshake.sdpOffer)">Refuse</button>
       </div>
     </div>
   </div>

@@ -1,18 +1,17 @@
 <script lang="ts" setup>
 import UserProfile from "../components/UserProfile.vue";
-import HandshakeComponent from "../components/HandshakeComponent.vue";
-import ConversationsComponent from "../components/ConversationsComponent.vue";
+import Handshake from "../components/Handshake.vue";
+import Conversations from "../components/Conversations.vue";
 </script>
 
 <template>
   <div class="home-page">
     <div class="nav">
-      <div class="divider"></div>
       <UserProfile/>
     </div>
     <div class="content">
-      <HandshakeComponent/>
-      <ConversationsComponent/>
+      <Handshake/>
+      <Conversations/>
     </div>
   </div>
 
@@ -29,6 +28,7 @@ import ConversationsComponent from "../components/ConversationsComponent.vue";
 .nav {
   display: flex;
   justify-content: end;
+  gap: 2rem;
   padding: 1rem;
   box-sizing: border-box;
 }

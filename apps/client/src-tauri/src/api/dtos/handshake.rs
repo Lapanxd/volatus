@@ -4,4 +4,5 @@ use serde::{Deserialize, Serialize};
 pub struct PendingHandshakeOutputDto {
     pub session_id: String,
     pub from_user_id: u32,
+    pub sdp_offer: String,
 }
