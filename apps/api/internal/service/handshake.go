@@ -78,6 +78,7 @@ func GetPendingHandshakes(userID uint) []dto.Pending {
 			pending = append(pending, dto.Pending{
 				SessionID:  id,
 				FromUserID: session.FromUserID,
+				SDPOffer:   session.SDPOffer,
 			})
 		}
 	}

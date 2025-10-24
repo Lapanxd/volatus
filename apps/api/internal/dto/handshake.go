@@ -18,6 +18,7 @@ type ResponseInput struct {
 type Pending struct {
 	SessionID  string `json:"session_id"`
 	FromUserID uint   `json:"from_user_id"`
+	SDPOffer   string `json:"sdp_offer"`
 }
 
 type PendingOutput struct {
